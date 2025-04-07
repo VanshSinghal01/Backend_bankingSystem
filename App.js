@@ -6,9 +6,12 @@ const connect = require("./database")
 const cors = require('cors')
 const datamodel = require("./USerSchema.js")
 const send = require('./sendemail.js');
+const config = require('./config/configuration.js')
 
 app.use(cors());
 app.use(express.json())
+const hostname = config.SERVER.HOSTNAME;
+const port = config.SERVER.PORT;
 
 let accountnum = {};
 
@@ -48,13 +51,13 @@ app.post('/datasave', async (req, res) => {
   console.log('Received data:', req.body);
 
   if (!otp) {
-    return res.status(400).json({ message: 'OTP is required' });
+    return res.status(config.StatusCode.BAD_REQUEST).json({ message: 'OTP is required' });
   }
 
   console.log(`Generated OTP: ${otpgen}, Received OTP: ${otp}`);
 
   if (otp != otpgen) {
-    return res.status(400).json({ message: 'OTP is incorrect' });
+    return res.status(config.StatusCode.BAD_REQUEST).json({ message: 'OTP is incorrect' });
   }
 
   try {
@@ -78,13 +81,13 @@ app.post('/datasave', async (req, res) => {
     await finalobj.save();
     console.log('Data saved successfully');
 
-    res.json({
+    res.status(config.StatusCode.SUCCCESS).json({
       message: 'Data saved successfully',
       accountNumber: accountnum, 
     });
   } catch (err) {
     console.error('Detailed Error:', err.message);
-    res.status(500).json({
+    res.status(config.StatusCode.INTERNAL_SERVER_ERROR).json({
       message: 'Failed to save data',
       error: err.message,
     });
@@ -96,13 +99,13 @@ app.post('/emailsend', async (req, res) => {
   const { Email } = req.body;
 
   if (!Email) {
-    return res.status(400).json({ message: "Email is required" });
+    return res.status(config.StatusCode.BAD_REQUEST).json({ message: "Email is required" });
   }
 
   try {
     const userinfo = await datamodel.findOne({ Email: Email.toLowerCase() });
     if (userinfo) {
-      return res.status(400).json({ message: 'Email already exists' });
+      return res.status(config.StatusCode.BAD_REQUEST).json({ message: 'Email already exists' });
     }
 
     // Generate OTP and Account Number
@@ -128,14 +131,14 @@ app.post('/emailsend', async (req, res) => {
     `;
     send(Email, emailContent);
 
-    res.json({
+    res.status(config.StatusCode.SUCCCESS).json({
       message: 'OTP and account number sent successfully',
       otpgen,
       accountNumber,
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "An error occurred" });
+    res.status(config.StatusCode.INTERNAL_SERVER_ERROR).json({ message: "An error occurred" });
   }
 });
 
@@ -159,7 +162,7 @@ app.post('/login', async (req, res) => {
     let passmatch = await bcrypt.compare(password, userinfo.Password);
 
     if (passmatch) {
-      res.json({
+      res.status(config.StatusCode.SUCCCESS).json({
         message: 'success',
         data: {
           name: userinfo.Name,
@@ -175,7 +178,7 @@ app.post('/login', async (req, res) => {
     }
   } catch (err) {
     console.error(err);
-    res.json({ message: err.message });
+    res.status(config.StatusCode.INTERNAL_SERVER_ERROR).json({ message: err.message });
   }
 });
 
@@ -185,14 +188,7 @@ app.post('/login', async (req, res) => {
 
 
 connect()
-  .then(() => {
-        app.listen(3500, () => {
-            console.log("server is running on port 3500");
-        })
-        console.log('database is connected');
 
-    })
-    .catch(() => {
-        console.log("server is not running ");
-
-    })
+app.listen(port, hostname, () => {
+  console.log(`Server running at http://${hostname}:${port}`);
+});
