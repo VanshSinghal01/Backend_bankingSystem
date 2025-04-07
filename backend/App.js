@@ -189,6 +189,6 @@ app.post('/login', async (req, res) => {
 
 connect()
 
-app.listen(port, hostname, () => {
+app.listen(port,'0.0.0.0', hostname, () => {
   console.log(`Server running at http://${hostname}:${port}`);
 });

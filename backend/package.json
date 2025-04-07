@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "App.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node App.js"
   },
   "author": "VAnsh",
   "license": "ISC",
@@ -15,6 +16,7 @@
     "express": "^4.21.1",
     "mongoose": "^8.7.2",
     "nodemailer": "^6.9.16",
+    "nodemon": "^3.1.9",
     "validator": "^13.12.0"
   }
 }
